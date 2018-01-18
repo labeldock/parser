@@ -1,0 +1,450 @@
+@mixin vender-prefix($name,$value){
+    -webkit-#{$name} : $value;
+    -moz-#{$name}    : $value;
+    -ms-#{$name}     : $value;
+    #{$name}         : $value;
+}
+
+@mixin width-height($width:false,$height:false) {
+    @if $width != false  { width:$width; }
+    @if $height != false { height:$height; }
+}
+
+@mixin when($parent,$parent-state) {
+    @each $state in $parent-state {
+        $rep:selector-replace(&, $parent, #{$parent+$state});
+        @at-root #{$rep} {
+            @content;
+        }
+    }
+}
+
+@mixin focus-variant($flag:true,$color:false){
+    @if $flag == false {
+        &:focus {
+            outline: none;
+        }
+    } @else {
+        &:focus {
+            @include focus($color);
+        }
+    }
+}
+
+@mixin focus($color:false,$size:false,$inset:false) {
+    @if $inset == true or $inset == inset {
+        box-shadow:inset 0px 0px ($size or 5px) ($color or rgba(81, 203, 238, 1));
+    } @else {
+        box-shadow:0px 0px ($size or 5px) ($color or rgba(81, 203, 238, 1));
+    }
+}
+
+@mixin align-block($align:left, $width:false, $height:false){
+    display:block;
+    @if $align == left {
+        margin-left:0;
+        margin-right:auto;
+    }
+    @if $align == right {
+        margin-left:auto;
+        margin-right:0;
+    }
+    @if $align == center {
+        margin-left:auto;
+        margin-right:auto;
+    }
+    @include width-height($width,$height);
+}
+
+@mixin inline-block($width:false, $height:false,$vertical-align:false,$line-height:false){
+    display:inline-block;
+    @include width-height($width,$height);
+
+    @if $vertical-align == false {
+        vertical-align:middle;
+    } @else {
+        vertical-align:$vertical-align;
+    }
+
+    @if $line-height {
+        line-height:$line-height;
+    }
+    @content;
+}
+
+@mixin block($width:false, $height:false, $align-block:false, $line-height:false){
+    @include align-block($align-block, $width, $height);
+
+    @if $line-height {
+        line-height:$line-height;
+    }
+
+    @content;
+}
+
+@mixin block-variant($width:false,$height:false,$vertical-align:middle,$align-block:false){
+    @if $align-block {
+        @include block($width,$height,$align-block);
+    } @else {
+        @include inline-block($width,$height,$vertical-align);
+    }
+    @content;
+}
+
+@mixin list-variant($list-style:none,$list-style-position:inside){
+	padding:0px;
+	> li{
+		margin:0px;
+		@if $list-style {
+			list-style:$list-style;
+		}
+		@if $list-style-position {
+			list-style-position:$list-style-position;
+		}
+	}
+	@content;
+}
+
+@mixin cellbase-table-variant($spacing:0px,$table-width:false,$table-layout:auto) {
+    display:table;
+    @if $table-width { width:$table-width; }
+    table-layout:$table-layout;
+    @if $spacing > 0px {
+        border-spacing:$spacing;
+        border-collapse:separate;
+    } @else {
+        border-spacing:0px;
+        border-collapse:collapse;
+    }
+	@content;
+}
+
+@mixin fixed-table-variant($spacing:0px,$width:99.99%) { 
+  @include cellbase-table-variant($spacing,$width,fixed);
+  @content; 
+}
+
+@mixin table-variant($spacing:0px,$width:99.99%) { 
+  @include cellbase-table-variant($spacing,$width,fixed);
+  @content; 
+}
+
+@mixin user-select-variant($flag:auto) {
+    @if $flag == false or $flag == none {
+        -webkit-touch-callout: none;
+        @include vender-prefix(user-select, none);
+    } @else {
+        @if $flag == true {
+            $flag:auto;
+        }
+        -webkit-touch-callout: auto;
+        @include vender-prefix(user-select, auto);
+    }
+}
+
+@mixin appearance-variant($flag:true){
+    @if $flag == true {
+        @include vender-prefix(appearance,normal);
+        &::-ms-expand { display:normal; }
+    } @elseif $flag == false {
+        @include vender-prefix(appearance,none);
+        &::-ms-expand { display:none; }
+    } @else {
+        @include vender-prefix(appearance,$flag);
+        &::-ms-expand { display:$flag; }
+    }
+    @content;
+}
+
+@mixin pointer-events-variant($flag:true,$cursor:false){
+    @if $flag == false or $flag == none {
+        pointer-events: none;
+        @if $cursor == true {
+            cursor:not-allowed;
+        }
+        @include user-select-variant(false);
+    } @else {
+        @if $flag == true {
+            $flag:auto;
+        }
+        pointer-events:$flag;
+        @if $cursor == true {
+            cursor:auto;
+        }
+        @include user-select-variant(true);
+    }
+}
+
+@mixin word-break-variant($flag:true,$text-overflow:clip) {
+    @if $flag == true{
+        white-space: normal;
+        word-break:break-all;
+        text-overflow: initial;
+        -o-text-overflow: initial;
+        -ms-text-overflow: initial;
+    }
+    @if $flag == false{
+        white-space: nowrap;
+        word-break:keep-all;
+        text-overflow: $text-overflow;
+        -o-text-overflow: $text-overflow;
+        -ms-text-overflow: $text-overflow;
+    }
+}
+
+@mixin word-wrap-variant($flag:true,$overflow:false,$text-overflow:clip) {
+    @if $flag == true{
+        white-space: normal;
+        word-break:keep-all;
+        //word-break:normal;
+        //word-wrap:normal;
+        @if $overflow == false {
+            overflow: visible;
+        } @else {
+            overflow: $overflow;
+        }
+        text-overflow: initial;
+        -o-text-overflow: initial;
+        -ms-text-overflow: initial;
+    }
+    @if $flag == false{
+        white-space: nowrap;
+        //word-wrap:normal;
+        @if $overflow == false {
+            overflow: hidden;
+        } @else {
+            overflow: $overflow;
+        }
+        text-overflow: $text-overflow;
+        -o-text-overflow: $text-overflow;
+        -ms-text-overflow: $text-overflow;
+    }
+}
+
+@mixin ellipsis-variant($flag:true,$overflow:false){
+    @if $flag == true {
+        @include word-wrap-variant(false,$overflow,ellipsis);
+    }
+    @if $flag == false {
+        @include word-wrap-variant(true);
+    }
+}
+
+@mixin omission-variant($max-width:100%){
+    max-width:$max-width;
+    @include ellipsis-variant(true);
+}
+
+@mixin clear-block-variant($width:false,$height:false,$vertical-align:middle,$align-block:false){
+    @include block-variant($width,$height,$vertical-align,$align-block);
+    margin:0;
+    padding:0;
+    > * {
+        vertical-align:middle;
+    }
+    @content;
+}
+
+@mixin button-base($appearance-flag:false) {
+    @if $appearance-flag == false {
+        @include appearance-variant(false);
+        border:none;
+    }
+    @if $appearance-flag == true {
+        @include appearance-variant(button);
+    }
+    cursor:pointer;
+    text-align:center;
+    @include user-select-variant(false);
+    //TODO:TEST ellpisis and  visible
+    @include ellipsis-variant(true,visible);
+    &:hover{ text-decoration:none; };
+    &:active{ text-decoration:none; };
+}
+
+@mixin button-variant($width:false,$height:false,$vertical-align:middle,$align-block:false){
+    @include button-base;
+    @include clear-block-variant($width,$height,$vertical-align,$align-block);
+    @if $height {
+        line-height:$height;
+    } @else {
+        line-height:100%;
+    }
+    @content;
+}
+
+@mixin display-position-variant($position,$x:false,$y:false,$r:false,$b:false){
+    position:$position;
+    
+    @if $x == right {
+        $right:$y;
+        $top:$r;
+
+        @if $right == false { $right:0px; }
+        @if $top == false { $top:0px; }
+
+        $x:false;
+        $r:$right;
+        $y:$top;
+    }
+    @elseif $x == left {
+        $left:$y;
+        $top:$r;
+
+        @if $left == false { $left:0px; }
+        @if $top == false { $top:0px; }
+
+        $x:$left;
+        $y:$top;
+        $r:false;
+    }
+    @elseif $x == top {
+        $top:false;
+        $left:false;
+        $right:false;
+        @if $y == full {
+            $top:$r or 0px;
+            $left:$b or 0px;
+            $right:$b or 0px;
+        } @elseif $y == center {
+            $top:$r or 0px;
+            $left:auto;
+            $right:auto;
+        } @elseif $y == right {
+            $top:$r or 0px;
+            $left:auto;
+            $right:$b or 0px;
+        } @elseif $y == left {
+            $top:$r or 0px;
+            $left:$b or 0px;
+            $right:auto;
+        } @else {
+            $top:$y or 0px;
+            $left:$r or 0px;
+            $right:auto;
+        }
+
+        $x:$left;
+        $y:$top;
+        $r:$right;
+        $b:auto;
+    }
+    @elseif $x == bottom {
+
+        $bottom:false;
+        $left:false;
+        $right:false;
+        @if $y == full {
+            $bottom:$r or 0px;
+            $left:$b or 0px;
+            $right:$b or 0px;
+        } @elseif $y == center {
+            $bottom:$r or 0px;
+            $left:auto;
+            $right:auto;
+        } @elseif $y == right {
+            $bottom:$r or 0px;
+            $left:auto;
+            $right:$b or 0px;
+        } @elseif $y == left {
+            $bottom:$r or 0px;
+            $left:$b or 0px;
+            $right:auto;
+        } @else {
+            $bottom:$y or 0px;
+            $left:$r or 0px;
+            $right:auto;
+        }
+
+        $x:$left;
+        $y:auto;
+        $r:$right;
+        $b:$bottom;
+    }
+    @elseif $x == all or $x == full {
+        $x:0px;
+        $y:0px;
+        $r:0px;
+        $b:0px;
+    }
+
+    @if $x { left:$x; }
+    @if $y { top:$y; }
+    @if $r { right:$r; }
+    @if $b { bottom:$b; }
+    @if $x != false and $r != false {
+        width:auto;
+    }
+    @if $y != false and $b != false {
+        height:auto;
+    }
+    @content;
+}
+
+@mixin absolute($x:false,$y:false,$r:false,$b:false){
+    @include display-position-variant(absolute,$x,$y,$r,$b);
+}
+
+@mixin modal-variant($background-color:rgba(0,0,0,0.65)) {
+    -ms-overflow-style: none;
+    position: fixed;
+    top: 0;
+    right: -18px;
+    bottom: 0;
+    left: -18px;
+    z-index: 9900;
+    display: none;
+    overflow: hidden;
+    outline: 0;
+    background-color:$background-color;
+    -webkit-overflow-scrolling: touch;
+    &::-webkit-scrollbar {
+        width: 0 !important;
+    }
+    &[open] {
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: block;
+        > dialog {
+            display:block;
+        }
+    }
+}
+
+@mixin dialog-variant($width:50%,$height:auto,$top:50px) {
+    position: relative;
+    margin: $top auto;
+    width: $width;
+    height:$height;
+    background-color:white;
+    border:none;
+}
+
+@mixin translate($x:false,$y:false){
+    @if ($x == false and $y == false) {
+        @include vender-prefix(transform, translate(0px,0px));
+    } @else if ($x != false and $y != false){
+        @include vender-prefix(transform, translate(#{$x},#{$y}));
+    } @else if($x == false) {
+        @include translateY($y);
+    } @else {
+        @include translateX($x);
+    }
+}
+
+@mixin translate-center($offset-x:false,$offset-y:false,$position:absolute) {
+    position: $position;
+
+    @if $offset-x {
+        @include calc(left,50%,$offset-x,50%);
+    } @else {
+        left: 50%;
+    }
+    @if $offset-y {
+        @include calc(top,50%,$offset-y,50%);
+    } @else {
+        top: 50%;
+    }
+    @include translate(-50%,-50%);
+    @content;
+}
