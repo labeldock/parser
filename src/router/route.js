@@ -11,6 +11,11 @@ export default new Router({
       component: require('@/pages/home').default
     },
     {
+      path: '/filters',
+      name: 'filters',
+      component: require('@/pages/filters').default
+    },
+    {
       path: '/arguments',
       name: 'arguments',
       component: require('@/pages/arguments').default

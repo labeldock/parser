@@ -20,6 +20,11 @@ export default {
 @import 'scss/preset.scss';
 body {
   margin:0;
+  &,*,*:before,*:after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
 }
 
 #master-container {

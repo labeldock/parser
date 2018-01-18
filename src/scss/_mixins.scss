@@ -10,6 +10,16 @@
     @if $height != false { height:$height; }
 }
 
+@mixin clearfix {
+    &:after {
+        content:"";
+        display:block;
+        height:0px;
+		width:0px;
+        clear:both;
+    }
+}
+
 @mixin when($parent,$parent-state) {
     @each $state in $parent-state {
         $rep:selector-replace(&, $parent, #{$parent+$state});
