@@ -36,6 +36,10 @@ let idx = 0;
 
 export default {
   name: 'filters',
+  mounted (){
+    console.log("bow window")
+    window.bow = bow;
+  },
   components: {
     parser
   },

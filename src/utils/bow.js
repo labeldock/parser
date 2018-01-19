@@ -17,6 +17,7 @@ export default (function (global, load) {
     applyBoxFns({
       isObject:IS_OBJECT,
       isArray:IS_ARRAY,
+      isFunction:IS_FUNCTION,
       isNumberLike:IS_NUMBER_LIKE,
       isNode:IS_NODE,
       isEmpty:IS_EMPTY,
@@ -27,6 +28,8 @@ export default (function (global, load) {
       hasValue:HAS_VALUE,
       get:GET,
       getKeyBy:GET_KEY_BY,
+      findIndexes:FIND_INDEXES,
+      stringCast:STRING_CAST,
       //
       unique:UNIQUE,
       removeValue:REMOVE_VALUE,
@@ -43,6 +46,7 @@ export default (function (global, load) {
       //
       toggle:TOGGLE,
       trun:TRUN,
+      apart:APART,
       //
       rand64:RAND64,
       tokenize:TOKENIZE
@@ -54,6 +58,8 @@ export default (function (global, load) {
   //PINPONGPOOL NATIVE
   let IS_OBJECT      = (object)=> (object !== null && typeof object === "object") ? true : false
   let IS_ARRAY       = (data)=>data instanceof Array
+  let IS_FUNCTION    = (f)=>typeof f === "function"
+  let IS_NUMBER      = (n)=>typeof n === "number" && !isNaN(n)
   let IS_NUMBER_LIKE = (t)=>(typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false )
   let IS_NODE        = (a)=>IS_OBJECT(a) && typeof a.nodeType === "number"
   let IS_EMPTY  = function(){
@@ -73,6 +79,7 @@ export default (function (global, load) {
     if (typeof o === "boolean")return false;
     return true;
   }
+  let IS_PATTERN = (s)=> (typeof s === "string") || (s instanceof RegExp)
   
   let TO_ARRAY = function(data,option){
     if(typeof data === "undefined" || data === null || data === NaN ) return [];
@@ -209,9 +216,134 @@ export default (function (global, load) {
   }
   
   let GET_KEY_BY = function(object,value){
-    if(IS_ARRAY(object)) for(var i=0,l=object.length;i<l;i++) if(object[i]===value) return i;
-    if(IS_OBJECT(object)) for(var key in object) if(object[key]===value) return key;
+    if(IS_FUNCTION(value)){
+      if(IS_ARRAY(object)) for(var i=0,l=object.length;i<l;i++) if(value(object[i],i)===true) return i;
+      if(IS_OBJECT(object)) for(var key in object) if(value(object[key],key)===true) return key;
+    } else {
+      if(IS_ARRAY(object)) for(var i=0,l=object.length;i<l;i++) if(object[i]===value) return i;
+      if(IS_OBJECT(object)) for(var key in object) if(object[key]===value) return key;
+    }
   }
+  
+  
+  let STRING_CAST = (function(){
+    return function(text,defaultOrder,finder,at){
+      if(typeof text === "string" || typeof text === "number"){
+        let idxs  = []
+        let hist  = []
+        let count = 0
+        let pin   = (!at || !IS_NUMBER(at) || at < 0)?0:at
+        let strlen= text.length
+        let order = defaultOrder
+        let next
+        
+        if(typeof finder !== "function"){ 
+          finder = void 0
+        }
+        
+        do {
+          let start = void 0;
+          let size  = void 0;
+          
+          console.log(`%cdo order ${count} - ${order}`,"background-color:red;")
+          if(typeof order === "string"){
+            let findedIndex = text.indexOf(order,pin)
+            if(findedIndex !== -1){
+              start = findedIndex
+              size  = order.length
+            }
+          } else if (order instanceof RegExp) {
+            let cs = text.substring(pin || 0);
+            let ma = cs.match(order);
+            if(ma){
+              start = cs.indexOf(ma) + (ma.length - 1)
+              size  = ma.length
+            } 
+          }
+          
+          count++;
+          
+          if(typeof start !== "undefined"){
+            let string = text.substring(start,start + size);
+            let struct = {string,start,size,end:start + size}
+            
+            //before pin
+            if(pin < start){
+              let noneCastStruct = {
+                string:text.substring(pin,start),
+                start:pin,
+                size:start-pin,
+                end:start
+              }
+              finder && finder(false,noneCastStruct,hist,count)
+            }
+            
+            //now pin
+            pin = start + size;
+
+            //order
+            let nextOrder = finder && finder(true,struct,hist,count);
+            if(IS_PATTERN(nextOrder)){
+              order = nextOrder
+            } else {
+              order = defaultOrder
+            }
+            
+            //idx
+            idxs.push(start)
+            hist.push({string,start,size})
+            
+            //to be countinue
+            if(pin >= strlen){
+              next = false
+            } else {
+              next = true;
+            }
+          } else {
+            let struct = {
+                string:text.substring(pin,strlen),
+                start:pin,
+                size:start-pin,
+                end:strlen
+            }
+            finder && finder(false,struct,hist,count);
+            next = false;
+          }
+          
+        } while((count > 1000) ? false : next)
+        return idxs;
+      }
+    }
+  }())
+  
+  /*
+    bow.findIndexes("hello world","l") [2,3,9]
+    bow.findIndexes("hello world",/l/) [2,3,9]
+    bow.findIndexes("hello world",/\s/) [5]
+  */
+  let FIND_INDEXES = (function(){
+    var __find_string = (c,s,p)=>c.indexOf(s,p)
+    var __find_regexp = (c,s,p)=>{
+      let i = c.substring(p || 0).search(s);
+      return (i >= 0) ? (i + (p || 0)) : i;
+    }
+    return function(c,s,at){
+        if(typeof c === "string" || typeof c === "number"){
+          var idxs=[], mvc=c+"", s=IS_PATTERN(s)?s:s+"", at=(!at || !IS_NUMBER(at) || at < 0)?0:at, __find=((s instanceof RegExp)?__find_regexp:__find_string), next;
+          do {
+            let i = __find(c,s,at);
+            if(i > -1){
+              at = (s.length || 1) + i;
+              idxs.push(i); 
+              next = true;
+            } else {
+              next = false;
+            }
+          } while(next)
+          return idxs;
+        }
+      }
+  }());
   
   let EACH_PROC = function(arr,proc){
       if(arr.length > 1){
@@ -228,9 +360,9 @@ export default (function (global, load) {
       return obj;
   }
   
-  let EACH = (value,proc)=>EACH_PROC(AS_ARRAY(value),proc)
+  let EACH     = (value,proc)=>EACH_PROC(AS_ARRAY(value),proc)
   let FOR_EACH = (value,proc)=>STATIC_FOR_EACH_PROC(value,proc)
-  let REDUCE = function(value,proc,meta){
+  let REDUCE   = function(value,proc,meta){
     value = AS_ARRAY(value);
     return EACH_PROC(value,function(v,i,l){ meta = proc(meta,v,i,l); }),meta;
   }
@@ -388,7 +520,7 @@ export default (function (global, load) {
     return result;
   }
   
-  //PINPONGPOOL INSPECTOR
+  //PINPONGPOOL FORMAT
   let RANGE = function(value,step,sizeBase){
     var r=[],start,end,reverse;
     
@@ -445,6 +577,39 @@ export default (function (global, load) {
       }
     }
     return true;
+  }
+  
+  let APART = function(text,split,block,blockEnd){
+    if(typeof text !== "string") return [text];
+    
+    let result = text.split(split===true?/\s+/:split||/\s+/);
+    
+    if(IS_PATTERN(block)){
+      if(!IS_PATTERN(blockEnd)){
+        blockEnd = block;
+      }
+      
+      let aparts = []
+      let buffer = { dept:0, parts:[] }
+      
+      for(let d=result,i=0,l=d.length;i<l;i++){
+        let part = d[i]
+        let greb = {
+          start:FIND_INDEXES(part,block), 
+          end  :FIND_INDEXES(part,blockEnd) 
+        }
+        
+        console.log("part, greb", part, greb);
+        
+        for(let d=greb.start,i=0,l=d.length;i<l;++i){
+          let startIndex = d[i]
+        }
+      }
+      
+      return aparts;
+    } else {
+      return result;
+    }
   }
   
   let DIFF_STRUCTURE = function(before,after){
