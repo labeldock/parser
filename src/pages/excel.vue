@@ -1,24 +1,30 @@
 <template>
   <main>
       <div>
-        <excel-input></excel-input>
-        
-        <excel-view></excel-view>
+        <excel-input @change-sheets="sheets = $event"></excel-input>
+        <ul>
+          <li v-for="(sheet, index) in sheets">
+            <excel-sheet-view v-model="sheets[index]"></excel-sheet-view>
+          </li>
+        </ul>
       </div>
   </main>
 </template>
 
 <script>
 import ExcelInput from "@/components/excel-input.vue"
-import ExcelView from "@/components/excel-view.vue"
+import ExcelSheetView from "@/components/excel-sheet-view.vue"
 
 export default {
   name: 'excel',
   components:{
-    ExcelInput, ExcelView
+    ExcelInput, 
+    ExcelSheetView
   },
   data () {
-    return {}
+    return {
+      sheets:[]
+    }
   }
 }
 </script>
