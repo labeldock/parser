@@ -16,14 +16,9 @@ export default new Router({
       component: require('@/pages/filters').default
     },
     {
-      path: '/arguments',
-      name: 'arguments',
-      component: require('@/pages/arguments').default
-    },
-    {
-      path: '/urls',
-      name: 'urls',
-      component: require('@/pages/urls').default
+      path: '/excel',
+      name: 'excel',
+      component: require('@/pages/excel').default
     }
   ]
 })
