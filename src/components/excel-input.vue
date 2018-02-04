@@ -34,7 +34,13 @@ export default {
         let sheets = [];
         
         Object.keys(e.Sheets).forEach(key=>{
-          let sheet = {name:key, content:{ ...e.Sheets[key] }};
+          let sheet = {name:key, content:{}, meta:{}};
+          
+          let sheetBody = e.Sheets[key];
+          Object.keys(sheetBody).forEach(key=>{
+            sheet[key.indexOf("!") == 0 ? 'meta' : 'content'][key] = sheetBody[key]
+          })
+          
           sheets.push(sheet)
         });
         
