@@ -1,7 +1,7 @@
 <template>
   <div>
     <button @click="info"></button>
-    <input class="v-excel-parser" type="file">
+    <input class="v-excel-parser" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
   </div>
 </template>
 <script>
